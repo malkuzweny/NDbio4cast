@@ -30,13 +30,17 @@ noaa_past <- df_past |>
   dplyr::rename(ensemble = parameter) |> 
   dplyr::collect()
 
+#plot relationships
+
 #future NOAA data
 #set forecast date as yesterday
 #error here!
 forecast_date <- Sys.Date() - lubridate::days(1)
 df_future <- neon4cast::noaa_stage2(cycle = 0)
 noaa_future <- df_future |> 
-  dplyr::filter(variable == "air_temperature") |> 
+  #start date filter error
+  dplyr::filter(variable == "air_temperature",
+                start_date == forecast_date) |> 
   dplyr::rename(ensemble = parameter) |> 
   dplyr::collect()
 
