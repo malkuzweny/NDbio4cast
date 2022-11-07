@@ -3,6 +3,10 @@ library(neon4cast)
 library(lubridate)
 library(rMR)
 library(arrow)
+library(rjags)
+library(rnoaa)
+library(daymetr)
+devtools::install_github("EcoForecast/ecoforecastR",force=TRUE)
 
 #load target data
 target <- readr::read_csv("https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz") |>
@@ -17,8 +21,8 @@ target_barc_temp <- subset(target_barc, variable == "temperature")
 target_barc_chla <- subset(target_barc, variable == "chla")
 
 #set up model variables
-time <- target_barc$datetime
-y <- target_barc_do
+time <- as.Date(target_barc_do$datetime)
+y <- as.vector(target_barc_do$observation)
 
 
 #Random Walk Timeseries Model
@@ -48,7 +52,7 @@ data <- list(y=y,n=length(y),      ## data (what do I put??)
              a_add=1,r_add=1            ## process error prior (what do I put??)
 )
 
-#Define MCMC Chains -- THIS DOESN'T WORK BECAUSE THERE ARE STILL NAs IN THE DO DATA I THINK
+#Define MCMC Chains -- 
 nchain = 3
 init <- list()
 for(i in 1:nchain){
@@ -66,4 +70,29 @@ jags.out   <- coda.samples (model = j.model,
                             variable.names = c("tau_add","tau_obs"),
                             n.iter = 1000)
 plot(jags.out)
+
+
+time.rng = c(1,length(time))       ## adjust to zoom in and out
+out0 <- as.matrix(jags.out)         ## convert from coda to matrix  
+x.cols <- grep("^x",colnames(out0)) ## grab all columns that start with the letter x
+ci0 <- apply(exp(out0[,x.cols]),2,quantile,c(0.025,0.5,0.975)) ## model was fit on log scale
+
+plot(time,ci0[2,],type='n',ylim=range(y,na.rm=TRUE),ylab="DO",log='y',xlim=time[time.rng])
+## adjust x-axis label to be monthly if zoomed
+if(diff(time.rng) < 100){ 
+  axis.Date(1, at=seq(time[time.rng[1]],time[time.rng[2]],by='month'), format = "%Y-%m")
+}
+ecoforecastR::ciEnvelope(time,ci0[1,],ci0[3,],col=ecoforecastR::col.alpha("lightBlue",0.75))
+points(time,y,pch="+",cex=0.5)
+
+
+
+hist(1/sqrt(out0[,1]),main=colnames(out0)[1])
+hist(1/sqrt(out0[,2]),main=colnames(out0)[2])
+
+#We'll also want to look at the joint distribution of the two parameters to check whether the two parameters strongly covary.
+
+plot(out0[,1],out0[,2],pch=".",xlab=colnames(out0)[1],ylab=colnames(out0)[2])
+cor(out0[,1:2])
+#change
 
