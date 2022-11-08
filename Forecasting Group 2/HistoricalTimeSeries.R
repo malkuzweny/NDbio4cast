@@ -67,17 +67,17 @@ j.model   <- jags.model (file = textConnection(RandomWalk),
                          n.chains = 3)
 
 jags.out   <- coda.samples (model = j.model,
-                            variable.names = c("tau_add","tau_obs"),
+                            variable.names = c("x", "tau_add","tau_obs"),
                             n.iter = 1000)
 plot(jags.out)
 
 
 time.rng = c(1,length(time))       ## adjust to zoom in and out
 out0 <- as.matrix(jags.out)         ## convert from coda to matrix  
-x.cols <- grep("^x",colnames(out0)) ## grab all columns that start with the letter x
+x.cols <- as.data.frame(out0[,3:1293]) ## grab all columns that start with the letter x
 ci0 <- apply(exp(out0[,x.cols]),2,quantile,c(0.025,0.5,0.975)) ## model was fit on log scale
 
-plot(time,ci0[2,],type='n',ylim=range(y,na.rm=TRUE),ylab="DO",log='y',xlim=time[time.rng])
+plot(time,ci0[2,],type='l',ylim=range(y,na.rm=TRUE),ylab="DO",log='y',xlim=time[time.rng])
 ## adjust x-axis label to be monthly if zoomed
 if(diff(time.rng) < 100){ 
   axis.Date(1, at=seq(time[time.rng[1]],time[time.rng[2]],by='month'), format = "%Y-%m")
