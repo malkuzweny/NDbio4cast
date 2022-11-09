@@ -74,8 +74,8 @@ plot(jags.out)
 
 time.rng = c(1,length(time))       ## adjust to zoom in and out
 out0 <- as.matrix(jags.out)         ## convert from coda to matrix  
-x.cols <- as.data.frame(out0[,3:1293]) ## grab all columns that start with the letter x
-ci0 <- apply(exp(out0[,x.cols]),2,quantile,c(0.025,0.5,0.975)) ## model was fit on log scale
+x.cols <- as.data.frame(out0[,3:1296]) ## grab all columns that contain data for a time point
+ci0 <- apply(x.cols,2,quantile,c(0.025,0.5,0.975)) ## model was NOT fit on log scale
 
 plot(time,ci0[2,],type='l',ylim=range(y,na.rm=TRUE),ylab="DO",log='y',xlim=time[time.rng])
 ## adjust x-axis label to be monthly if zoomed
