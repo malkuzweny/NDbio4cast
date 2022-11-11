@@ -22,7 +22,7 @@ ggplot(data = target_cram_temp, aes(x=datetime, y=observation)) + geom_point() +
 ggplot(data = target_cram_chla, aes(x=datetime, y=observation)) + geom_point() + ggtitle("Chlorophyll a")
 
 #past NOAA data
-sites <- unique(target_cram$site_id)
+sites <- unique(target_barc$site_id)
 df_past <- neon4cast::noaa_stage3()
 noaa_past <- df_past |> 
   dplyr::filter(site_id %in% sites,
@@ -35,7 +35,17 @@ noaa_past <- df_past |>
 #future NOAA data
 #set forecast date as yesterday
 #error here!
-forecast_date <- Sys.Date() - lubridate::days(1)
+df_future <- neon4cast::noaa_stage2(cycle = 0)
+noaa_future <- df_future |> 
+  dplyr::filter(start_date == as.integer(forecast_date),
+                variable == "air_temperature") |> 
+  dplyr::rename(ensemble = parameter) |> 
+  dplyr::collect()
+
+
+
+
+
 df_future <- neon4cast::noaa_stage2(cycle = 0)
 noaa_future <- df_future |> 
   #start date filter error
