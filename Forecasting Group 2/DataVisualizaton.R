@@ -32,11 +32,30 @@ noaa_past <- df_past |>
 
 #plot relationships
 
+
+forecast_date <- Sys.Date()#assign the nee forecast date as today (the date on the computer)
+noaa_date <- Sys.Date() - lubridate::days(1)#assign weather forecast date as yesterday (todays is not available yet)  
+
 #future NOAA data
 #set forecast date as yesterday
 #error here!
+<<<<<<< HEAD
 forecast_date <- Sys.Date() - lubridate::days(1)
 df_future <- neon4cast::noaa_stage2()
+=======
+df_future <- neon4cast::noaa_stage2()
+noaa_future <- df_future |> 
+  dplyr::filter(start_date == as.character(noaa_date),
+                variable == "air_temperature") |> 
+  dplyr::rename(ensemble = parameter) |> 
+  dplyr::collect()
+
+##
+
+
+
+df_future <- neon4cast::noaa_stage2(cycle = 0)
+>>>>>>> 1dbcad3452e826786e509479b7678bd818bd99ba
 noaa_future <- df_future |> 
   dplyr::filter(start_date == as.character(forecast_date),
                 variable == "air_temperature") |> 
