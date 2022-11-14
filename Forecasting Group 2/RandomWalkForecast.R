@@ -6,6 +6,7 @@ library(arrow)
 library(rjags)
 library(rnoaa)
 library(daymetr)
+library(padr)
 devtools::install_github("EcoForecast/ecoforecastR",force=TRUE)
 
 #load target data
@@ -14,11 +15,15 @@ target <- readr::read_csv("https://data.ecoforecast.org/neon4cast-targets/aquati
 
 #subset to BARC (Barco Lake in Florida)
 target_barc <- subset(target, site_id == "BARC")
+target_barc <- pad(target_barc)
 
 #subset data frames based on data type
 target_barc_do <- subset(target_barc, variable == "oxygen")
+target_barc_do <- pad(target_barc_do)
 target_barc_temp <- subset(target_barc, variable == "temperature")
+target_barc_temp <- pad(target_barc_temp)
 target_barc_chla <- subset(target_barc, variable == "chla")
+target_barc_chla <- pad(target_barc_chla)
 
 #set up model variables
 time <- as.Date(target_barc_do$datetime)
