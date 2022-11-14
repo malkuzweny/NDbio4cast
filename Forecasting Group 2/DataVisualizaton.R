@@ -36,9 +36,11 @@ noaa_past <- df_past |>
 #set forecast date as yesterday
 #error here!
 forecast_date <- Sys.Date() - lubridate::days(1)
-df_future <- neon4cast::noaa_stage2(cycle = 0)
+df_future <- neon4cast::noaa_stage2()
 noaa_future <- df_future |> 
-  #start date filter error
+  dplyr::filter(start_date == as.character(forecast_date),
+                variable == "air_temperature") |> 
+  dplyr::rename(ensemble = parameter) |> 
   dplyr::collect()
 
 noaa_past_mean <- noaa_past |> 
