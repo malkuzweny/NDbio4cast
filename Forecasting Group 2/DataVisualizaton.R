@@ -38,29 +38,16 @@ noaa_date <- Sys.Date() - lubridate::days(1)#assign weather forecast date as yes
 
 #future NOAA data
 #set forecast date as yesterday
-#error here!
-<<<<<<< HEAD
-forecast_date <- Sys.Date() - lubridate::days(1)
-df_future <- neon4cast::noaa_stage2()
-=======
-df_future <- neon4cast::noaa_stage2()
-noaa_future <- df_future |> 
-  dplyr::filter(start_date == as.character(noaa_date),
-                variable == "air_temperature") |> 
-  dplyr::rename(ensemble = parameter) |> 
-  dplyr::collect()
-
-##
-
-
-
 df_future <- neon4cast::noaa_stage2(cycle = 0)
->>>>>>> 1dbcad3452e826786e509479b7678bd818bd99ba
-noaa_future <- df_future |> 
-  dplyr::filter(start_date == as.character(forecast_date),
-                variable == "air_temperature") |> 
-  dplyr::rename(ensemble = parameter) |> 
+noaa_future <- df_future |>
+  dplyr::filter(site_id == "BARC",
+                reference_datetime == as.Date(noaa_date),
+                datetime >= lubridate::as_datetime(forecast_date),
+                variable == "air_temperature") |>
+  dplyr::rename(ensemble = parameter) %>%
+  dplyr::select(datetime, prediction, ensemble) |>
   dplyr::collect()
+
 
 noaa_past_mean <- noaa_past |> 
   mutate(date = as_date(time)) |> 
@@ -68,4 +55,5 @@ noaa_past_mean <- noaa_past |>
   summarize(air_temperature = mean(predicted, na.rm = TRUE), .groups = "drop") |> 
   rename(datetime = date) |> 
   mutate(air_temperature = air_temperature - 273.15)
+
 
