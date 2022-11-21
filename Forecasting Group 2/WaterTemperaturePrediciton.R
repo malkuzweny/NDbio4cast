@@ -22,9 +22,10 @@ noaa_past_mean <- noaa_past |>
   rename(datetime = date) |> 
   mutate(air_temperature = air_temperature - 273.15)
 
-df_future <- neon4cast::noaa_stage2(cycle = 0)
+
+df_future <- neon4cast::noaa_stage2()
 noaa_future <- df_future |> 
-  dplyr::filter(start_date == as.character(forecast_date),
+  dplyr::filter(start_date == as.character(noaa_date),
                 variable == "air_temperature") |> 
   dplyr::rename(ensemble = parameter) |> 
   dplyr::collect()
@@ -40,9 +41,8 @@ sites <- unique(target$site_id)
 
 temp_forecast <- NULL
 
-for(i in 1:length(sites)){
-  
-  
+for(i in 1:length(sites)){ 
+i = 1
   
   site_target <- target |> 
     filter(site_id == sites[i])
@@ -50,17 +50,27 @@ for(i in 1:length(sites)){
   noaa_future_site <- noaa_future |> 
     filter(site_id == sites[i])
   
-  if(length(which(!is.na(site_target$air_temperature) & !is.na(site_target$temperature))) > 0){
+  #if(length(which(!is.na(site_target$air_temperature) & !is.na(site_target$temperature))) > 0){ #just an optional check if you're running it in a workflow
     
     #Fit linear model based on past data: water temperature = m * air temperature + b
     fit <- lm(site_target$temperature~site_target$air_temperature)
+    fit <- lm(temperature ~ air_temperature, data = site_target)
+    
+    noaa_subset <- subset(noaa_future_site, variable = "air_temperature")
+    colnames(noaa_subset) <- c("site_id", "air_temperature", "variable", "height", "horizon", "ensemble", "reference_datetime", "forecast_valid", "datetime", "longitude", "latitude", "family", "start_date")
+    noaa_subset[,2] = noaa_subset[,2] - 273
     
     #use linear regression to forecast water temperature for each ensemble member
-    forecasted_temperature <- fit$coefficients[1] + fit$coefficients[2] * noaa_future_site$air_temperature
+    forecasted_water_temperature <- fit$coefficients[1] + fit$coefficients[2] * noaa_subset$air_temperature
     
+   
     
     
     #Build site level dataframe.  Note we are not forecasting chla
-    temp_forecast <- dplyr::bind_rows(forecasted_temperature)
-  }
+    temp_forecast <- cbind(noaa_subset, forecasted_water_temperature)
+  #}
 }
+
+final_forecast <- temp_forecast$datetime
+final_forecast$forecasted_water_temperature <- temp_forecast$forecasted_water_temperature #this needs to be fixed still
+colnames(final_forecast) <- c("datetime", "forecasted_water_temp")
