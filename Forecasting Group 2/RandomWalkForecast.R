@@ -75,7 +75,7 @@ j.model   <- jags.model (file = textConnection(RandomWalk),
 jags.out   <- coda.samples (model = j.model,
                             variable.names = c("x", "tau_add","tau_obs"),
                             n.iter = 1000)
-plot(jags.out)
+#plot(jags.out)
 
 
 time.rng = c(1,length(time))       ## adjust to zoom in and out
