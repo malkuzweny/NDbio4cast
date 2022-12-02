@@ -23,6 +23,10 @@ noaa_past_mean <- noaa_past |>
   mutate(air_temperature = air_temperature - 273.15)
 
 
+forecast_date <- Sys.Date()#assign the nee forecast date as today (the date on the computer)
+noaa_date <- Sys.Date() - lubridate::days(1)#assign weather forecast date as yesterday (todays is not available yet)  
+
+
 df_future <- neon4cast::noaa_stage2()
 noaa_future <- df_future |> 
   dplyr::filter(start_date == as.character(noaa_date),
@@ -38,6 +42,8 @@ target <- target_barc |>
 target <- left_join(target, noaa_past_mean, by = c("datetime","site_id"))
 
 sites <- unique(target$site_id)
+subset_site_data <- site_target[917:nrow(site_target),]
+
 
 temp_forecast <- NULL
 
@@ -53,8 +59,8 @@ i = 1
   #if(length(which(!is.na(site_target$air_temperature) & !is.na(site_target$temperature))) > 0){ #just an optional check if you're running it in a workflow
     
     #Fit linear model based on past data: water temperature = m * air temperature + b
-    fit <- lm(site_target$temperature~site_target$air_temperature)
-    fit <- lm(temperature ~ air_temperature, data = site_target)
+  
+    fit <- lm(temperature ~ air_temperature, data = subset_site_data)
     
     noaa_subset <- subset(noaa_future_site, variable = "air_temperature")
     colnames(noaa_subset) <- c("site_id", "air_temperature", "variable", "height", "horizon", "ensemble", "reference_datetime", "forecast_valid", "datetime", "longitude", "latitude", "family", "start_date")
@@ -70,7 +76,12 @@ i = 1
     temp_forecast <- cbind(noaa_subset, forecasted_water_temperature)
   #}
 }
+temp_forecast <- subset(temp_forecast, select = -c(site_id, variable, height, horizon, ensemble, reference_datetime, forecast_valid, longitude, latitude, family, start_date))
 
-final_forecast <- temp_forecast$datetime
-final_forecast$forecasted_water_temperature <- temp_forecast$forecasted_water_temperature #this needs to be fixed still
-colnames(final_forecast) <- c("datetime", "forecasted_water_temp")
+
+
+
+
+
+
+
